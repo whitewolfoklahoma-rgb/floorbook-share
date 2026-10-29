@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FloorBook — Flooring Installer Estimator &amp; Job Book</title>
+<style>
+  :root{
+    --ink:#26201a; --mut:#6d6156; --line:#ddd3c6; --bg:#f5f1ea; --card:#ffffff;
+    --brand:#8a5a2b; --brand2:#b57e3e; --good:#1d7a3a; --bad:#b3261e; --warn:#fff4e0;
+    --chip:#efe9df; --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;}
+  header{background:linear-gradient(135deg,#6e451d,var(--brand2));color:#fff;padding:14px 16px;}
+  header h1{margin:0;font-size:22px;letter-spacing:.2px;}
+  header .sub{opacity:.92;font-size:13px;margin-top:2px;}
+  nav{display:flex;flex-wrap:wrap;gap:6px;background:#fff;border-bottom:1px solid var(--line);padding:8px 10px;position:sticky;top:0;z-index:5;}
+  nav button{flex:1 1 auto;min-width:86px;padding:10px 6px;border:1px solid var(--line);background:var(--chip);border-radius:8px;font-size:14px;cursor:pointer;color:var(--ink);}
+  nav button.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600;}
+  main{max-width:1060px;margin:0 auto;padding:14px 12px 60px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px;}
+  .card h2{margin:0 0 10px;font-size:17px;}
+  .card h3{margin:14px 0 8px;font-size:15px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 14px;}
+  @media (max-width:640px){.grid,.grid3,.grid4{grid-template-columns:1fr;}}
+  label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px;}
+  input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:15px;background:#fff;color:var(--ink);}
+  textarea{min-height:52px;resize:vertical;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brand2);outline-offset:0;border-color:var(--brand2);}
+  .btn{display:inline-block;padding:11px 16px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+  .btn.alt{background:#4a4038;}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .btn.small{padding:7px 10px;font-size:13px;min-height:40px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .priceline{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .priceline b{white-space:nowrap;}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;}
+  @media (max-width:640px){.three{grid-template-columns:1fr;}}
+  .pbox{border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;background:#fbf8f2;}
+  .pbox .lab{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;}
+  .pbox .val{font-size:21px;font-weight:800;margin-top:2px;}
+  .pbox.rec{border-color:var(--brand);background:#f7ecdb;}
+  .floorwarn{background:var(--warn);border:1px solid #e6b800;border-radius:8px;padding:10px;margin-top:10px;font-size:14px;}
+  .floorok{background:#eaf6ee;border:1px solid var(--good);border-radius:8px;padding:10px;margin-top:10px;font-size:14px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top;}
+  th{color:var(--mut);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;}
+  td.num,th.num{text-align:right;white-space:nowrap;}
+  .tablewrap{overflow-x:auto;}
+  .tag{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:600;background:var(--chip);}
+  .tag.quoted{background:#e3ecf7;} .tag.booked{background:#f7ecdb;} .tag.completed{background:#eaf6ee;} .tag.lost{background:#f7e3e1;}
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:800px){.statgrid{grid-template-columns:repeat(2,1fr);}}
+  .stat{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fbf8f2;}
+  .stat .lab{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;}
+  .stat .val{font-size:20px;font-weight:800;margin-top:2px;}
+  .muted{color:var(--mut);font-size:13px;}
+  .rowflex{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .spacer{flex:1;}
+  .jobcard{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#fff;}
+  .jobhead{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;cursor:pointer;}
+  .jobbody{display:none;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px;}
+  .jobbody.open{display:block;}
+  .roomcard{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#fdfbf7;}
+  .roomline{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:13.5px;}
+  .hidden{display:none !important;}
+  .settings-savebar{position:sticky;bottom:0;z-index:4;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 -2px 8px rgba(0,0,0,.08);}
+  #printSheet{display:none;}
+  @media print{
+    body{background:#fff;}
+    header,nav,main,.noprint{display:none !important;}
+    #printSheet{display:block !important;padding:10px;font-size:13px;color:#000;}
+    #printSheet h1{font-size:20px;margin:0 0 2px;}
+    #printSheet table td,#printSheet table th{border-bottom:1px solid #bbb;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🟫 FloorBook</h1>
+  <div class="sub">Flooring installer estimator &amp; job book — room-by-room takeoff with the right waste %, and the true profit on every job. Works 100% offline.</div>
+</header>
+<nav id="tabs">
+  <button data-tab="quote" class="active">New Quote</button>
+  <button data-tab="jobs">Job Book</button>
+  <button data-tab="dash">Dashboard</button>
+  <button data-tab="settings">Settings</button>
+  <button data-tab="help">Help</button>
+</nav>
+<main>
+  <!-- ============ QUOTE TAB ============ -->
+  <section id="tab-quote">
+    <div class="card">
+      <h2>Customer &amp; job</h2>
+      <div class="grid">
+        <div><label>Customer name *</label><input id="qCustomer" type="text" placeholder="e.g. Sarah Mitchell"></div>
+        <div><label>Phone</label><input id="qPhone" type="tel" placeholder="(555) 010-2030"></div>
+        <div><label>Address</label><input id="qAddress" type="text" placeholder="Street, City"></div>
+        <div><label>Job date</label><input id="qDate" type="date"></div>
+        <div><label>How did they find you?</label>
+          <select id="qSource">
+            <option>Google</option><option>Facebook</option><option>Referral</option>
+            <option>Repeat customer</option><option>Supplier / store referral</option><option>Nextdoor</option><option>Other</option>
+          </select></div>
+        <div><label>Job notes</label><input id="qDesc" type="text" placeholder="Whole main floor, LVP throughout…"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Rooms — the takeoff</h2>
+      <p class="muted" style="margin-top:0">Enter each room's dimensions (or a measured sq ft for odd shapes). Waste % fills in from the material + pattern table in Settings — the number that decides whether the job stalls waiting on material or the profit sits on a shelf. Labor is priced per installed (net) sq ft.</p>
+      <div id="roomList"></div>
+      <div class="rowflex">
+        <button class="btn small" id="addRoomBtn" type="button">+ Add room</button>
+        <span class="muted" id="takeoffSummary"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Extras &amp; job charges</h2>
+      <div id="extrasList"></div>
+      <p class="muted">Quantities default to zero — set what this job actually needs. Underlayment and removal are usually the room total's net sq ft.</p>
+    </div>
+
+    <div class="card">
+      <h2>True cost &amp; price</h2>
+      <div class="grid3">
+        <div><label>Travel / delivery trips ($)</label><input inputmode="decimal" id="qTravel" type="number" min="0" step="1"></div>
+        <div><label>Consumables — % of material cost</label><input inputmode="decimal" id="qConsumablesPct" type="number" min="0" step="0.5"></div>
+        <div><label>Overhead — % of job cost</label><input inputmode="decimal" id="qOverheadPct" type="number" min="0" step="0.5"></div>
+      </div>
+      <div id="costBreakdown" style="margin-top:10px"></div>
+      <div class="three">
+        <div class="pbox"><div class="lab">Break-even</div><div class="val" id="pBreakEven">$0</div></div>
+        <div class="pbox rec"><div class="lab">Recommended</div><div class="val" id="pRecommended">$0</div></div>
+        <div class="pbox"><div class="lab">Premium</div><div class="val" id="pPremium">$0</div></div>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div><label>Final price to customer ($)</label><input inputmode="decimal" id="qFinalPrice" type="number" min="0" step="1"></div>
+        <div><label>Deposit due at booking ($)</label><input inputmode="decimal" id="qDepositDue" type="number" min="0" step="1"></div>
+      </div>
+      <div id="floorBox"></div>
+      <div class="rowflex" style="margin-top:12px">
+        <button class="btn" id="saveQuoteBtn" type="button">Save to Job Book</button>
+        <button class="btn alt" id="printQuoteBtn" type="button">Print quote sheet</button>
+        <button class="btn ghost" id="newQuoteBtn" type="button">Start fresh quote</button>
+      </div>
+      <p class="muted" id="saveNote"></p>
+    </div>
+  </section>
+
+  <!-- ============ JOBS TAB ============ -->
+  <section id="tab-jobs" class="hidden">
+    <div class="card">
+      <h2>Job book</h2>
+      <p class="muted" style="margin-top:0">Quoted → booked → completed. Record the deposit and payments as they happen, then the job's real material and labor costs when it's done — FloorBook shows the true profit, not the hoped-for one.</p>
+      <div id="jobList"></div>
+      <p class="muted" id="jobEmpty"></p>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD TAB ============ -->
+  <section id="tab-dash" class="hidden">
+    <div class="card">
+      <h2>Dashboard</h2>
+      <div class="statgrid" id="dashStats"></div>
+    </div>
+    <div class="card">
+      <h2>Completed-job profit</h2>
+      <div class="tablewrap"><table id="dashProfitTable">
+        <thead><tr><th>Customer</th><th>Main material</th><th class="num">Price</th><th class="num">Actual costs</th><th class="num">True profit</th><th class="num">Margin</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="muted" id="dashProfitEmpty"></p>
+    </div>
+    <div class="card">
+      <h2>Who still owes you</h2>
+      <div class="tablewrap"><table id="dashOwedTable">
+        <thead><tr><th>Customer</th><th>Status</th><th class="num">Price</th><th class="num">Collected</th><th class="num">Balance due</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="muted" id="dashOwedEmpty"></p>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS TAB ============ -->
+  <section id="tab-settings" class="hidden">
+    <div class="settings-savebar noprint">
+      <button class="btn" id="saveSettingsBtn" type="button">Save settings</button>
+      <span id="settingsSaveMsg" aria-live="polite"></span>
+      <span class="muted">Settings also save as you change them - this button confirms it.</span>
+    </div>
+    <div class="card">
+      <h2>Your business</h2>
+      <div class="grid">
+        <div><label>Company name (prints on quotes)</label><input id="sCompany" type="text"></div>
+        <div><label>Phone</label><input id="sPhone" type="text"></div>
+        <div><label>Email</label><input id="sEmail" type="text"></div>
+        <div><label>City / service area</label><input id="sCity" type="text"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Pricing rules</h2>
+      <div class="grid3">
+        <div><label>Target margin %</label><input inputmode="decimal" id="sTargetMargin" type="number" min="0" max="95" step="1"></div>
+        <div><label>Profit floor — minimum margin %</label><input inputmode="decimal" id="sFloorMargin" type="number" min="0" max="95" step="1"></div>
+        <div><label>Minimum job charge ($)</label><input inputmode="decimal" id="sMinCharge" type="number" min="0" step="10"></div>
+        <div><label>Deposit due at booking %</label><input inputmode="decimal" id="sDepositPct" type="number" min="0" max="100" step="5"></div>
+        <div><label>Extras cost — % of extras price</label><input inputmode="decimal" id="sExtrasCostPct" type="number" min="0" max="100" step="1"></div>
+        <div><label>Default travel ($)</label><input inputmode="decimal" id="sTravelDefault" type="number" min="0" step="5"></div>
+      </div>
+      <p class="muted">Extras (transitions, baseboard, removal…) carry their own material and labor. Rather than track every stick of quarter-round, FloorBook costs extras at this % of what you charge for them. 55% is a sane planning default — calibrate it against a few finished jobs.</p>
+    </div>
+    <div class="card">
+      <h2>Materials — rates</h2>
+      <p class="muted" style="margin-top:0">Sell = what you charge the customer. Cost = what you actually pay (material) or pay your crew (labor). Box coverage 0 = sold by the roll / sq yd (carpet, sheet vinyl).</p>
+      <div class="tablewrap"><table id="matTable">
+        <thead><tr><th>Material</th><th class="num">Mat. sell $/sf</th><th class="num">Mat. cost $/sf</th><th class="num">Labor sell $/sf</th><th class="num">Labor cost $/sf</th><th class="num">Box coverage sf</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h2>Waste % by material &amp; pattern</h2>
+      <p class="muted" style="margin-top:0">The defaults are the trade's planning numbers (LVP straight-lay 7–10%, herringbone 12–15%…). Tight rooms with lots of cuts waste more; big open rectangles waste less. Adjust to what your last ten jobs actually used.</p>
+      <div class="tablewrap"><table id="wasteTable">
+        <thead><tr><th>Material</th><th class="num">Straight %</th><th class="num">Diagonal %</th><th class="num">Herringbone %</th><th class="num">Chevron %</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h2>Your data</h2>
+      <div class="rowflex">
+        <button class="btn alt" id="exportBtn" type="button">Export backup (JSON)</button>
+        <label class="btn ghost" style="margin:0">Import backup<input id="importFile" type="file" accept=".json,application/json" class="hidden"></label>
+        <button class="btn ghost" id="clearDemoBtn" type="button">Clear demo jobs</button>
+        <button class="btn ghost" id="eraseBtn" type="button">Erase everything</button>
+      </div>
+      <p class="muted" id="dataNote">Data lives only in this browser on this device. Export a backup before switching phones or clearing browser data.</p>
+    </div>
+  </section>
+
+  <!-- ============ HELP TAB ============ -->
+  <section id="tab-help" class="hidden">
+    <div class="card">
+      <h2>How FloorBook prices a job</h2>
+      <p><b>The takeoff.</b> Each room's net sq ft is length × width (or your measured sq ft for L-shaped rooms — measure the rectangles and add them). Order quantity = net × (1 + waste %). Waste is not padding; it's the cuts, the pattern matching, the damaged plank, and the closet corner. Under-order and the job stalls for a week waiting on a dye lot. Over-order and the profit sits on the customer's shelf.</p>
+      <p><b>Material</b> is charged and costed on the <b>order</b> quantity (you buy the waste too). <b>Labor</b> is charged and costed on the <b>net</b> installed area (you don't install the waste). Carpet and sheet vinyl show the order quantity in sq yards, the way they're sold.</p>
+      <p><b>Three prices.</b> Break-even is your true cost: material cost + crew cost + extras cost + consumables + travel + overhead. Recommended is the <i>higher</i> of your itemized rate-card total and the price that delivers your target margin — so a cheap material with expensive labor can't sneak through underpriced. Premium is recommended + 15%, for rush or difficult jobs.</p>
+      <p><b>The profit floor.</b> Set a minimum margin once. If the final price you type falls below the price that delivers that margin, FloorBook warns you in red and won't save the quote unless you deliberately tick the override. Strategic discounts are your call; accidents are what it stops.</p>
+      <p><b>Calibrate your defaults.</b> The waste table and rates are national planning numbers. Your supplier's prices and your crew's speed are the truth: after each job, compare what you ordered against what came back, and what the labor actually cost. Ten minutes in Settings after a few jobs makes every future quote sharper.</p>
+      <p><b>What FloorBook is not.</b> It doesn't draw room diagrams or do laser-measure imports, it doesn't order material, and it doesn't take payments or send invoices — it's the estimator and the job book. You keep collecting money however you already do. Estimates are planning numbers, not guarantees: verify site conditions, subfloor, and moisture before you quote a final price.</p>
+    </div>
+  </section>
+</main>
+<div id="printSheet"></div>
+<script>
+"use strict";
+/* ================= FloorBook — flooring installer estimator & job book ================= */
+var STORE_KEY = "floorbook_v1";
+
+var MATERIALS = [
+  {key:"lvp",      name:"LVP / Laminate"},
+  {key:"hardwood", name:"Hardwood"},
+  {key:"tile",     name:"Tile"},
+  {key:"carpet",   name:"Carpet"},
+  {key:"vinyl",    name:"Sheet Vinyl"}
+];
+var PATTERNS = [
+  {key:"straight",   name:"Straight lay"},
+  {key:"diagonal",   name:"Diagonal 45°"},
+  {key:"herringbone",name:"Herringbone"},
+  {key:"chevron",    name:"Chevron"}
+];
+var EXTRAS_DEF = [
+  {key:"transitions",  label:"Transitions & thresholds",        unit:"each",  price:12},
+  {key:"underlayment", label:"Underlayment / moisture barrier", unit:"per sf",price:0.55},
+  {key:"baseboard",    label:"Baseboard / quarter round",       unit:"per lf",price:2.25},
+  {key:"removal",      label:"Old floor removal & disposal",    unit:"per sf",price:1.25},
+  {key:"prep",         label:"Floor prep / leveling",           unit:"flat",  price:150},
+  {key:"furniture",    label:"Furniture moving",                unit:"flat",  price:150},
+  {key:"stairs",       label:"Stairs (per step)",               unit:"per step",price:45},
+  {key:"delivery",     label:"Delivery / material pickup",      unit:"flat",  price:75}
+];
+var STATUSES = ["quoted","booked","completed","lost"];
+
+function defaultMaterials(){
+  return {
+    lvp:      {matSell:3.20, matCost:2.10, laborSell:2.00, laborCost:1.40, boxSf:24},
+    hardwood: {matSell:5.90, matCost:4.20, laborSell:3.75, laborCost:2.60, boxSf:21},
+    tile:     {matSell:4.25, matCost:2.75, laborSell:5.25, laborCost:3.60, boxSf:15},
+    carpet:   {matSell:2.60, matCost:1.70, laborSell:1.10, laborCost:0.75, boxSf:0},
+    vinyl:    {matSell:2.40, matCost:1.55, laborSell:1.60, laborCost:1.10, boxSf:0}
+  };
+}
+function defaultWaste(){
+  return {
+    lvp:      {straight:8,  diagonal:12, herringbone:15, chevron:15},
+    hardwood: {straight:10, diagonal:13, herringbone:15, chevron:15},
+    tile:     {straight:10, diagonal:15, herringbone:20, chevron:20},
+    carpet:   {straight:10, diagonal:12, herringbone:15, chevron:15},
+    vinyl:    {straight:10, diagonal:12, herringbone:15, chevron:15}
+  };
+}
+function defaultSettings(){
+  return {
+    company:"", phone:"", email:"", city:"",
+    targetMargin:30, floorMargin:15, minCharge:350, depositPct:50,
+    extrasCostPct:55, travelDefault:35, consumablesPct:5, overheadPct:8,
+    materials:defaultMaterials(), waste:defaultWaste()
+  };
+}
+function emptyExtras(){
+  var o = {};
+  for (var i=0;i<EXTRAS_DEF.length;i++){ var d=EXTRAS_DEF[i]; o[d.key]={qty:0, price:d.price}; }
+  return o;
+}
+function blankRoom(){
+  return {name:"", L:0, W:0, areaOverride:0, material:"lvp", pattern:"straight", wastePct:8, matSell:3.20, boxSf:24};
+}
+function blankDraft(settings){
+  return {editingId:null, customer:"", phone:"", address:"", date:"", source:"Google", desc:"",
+    rooms:[blankRoom()], extras:emptyExtras(), travel:settings.travelDefault,
+    consumablesPct:settings.consumablesPct, overheadPct:settings.overheadPct,
+    finalPrice:null, depositDue:null, overrideFloor:false};
+}
+
+/* ---------- utils ---------- */
+function esc(s){
+  if (s===null||s===undefined) return "";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function num(v, dflt){
+  var n = parseFloat(v);
+  if (!isFinite(n)) return (dflt===undefined?0:dflt);
+  return n;
+}
+function clampNonNeg(v){ v = num(v,0); return v<0?0:v; }
+function r2(v){ return Math.round(num(v,0)*100)/100; }
+function money(v){
+  var n = r2(v);
+  var neg = n<0; n = Math.abs(n);
+  var s = n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  return (neg?"-$":"$")+s;
+}
+function fmtSf(v){ return (Math.round(num(v,0)*10)/10).toLocaleString("en-US"); }
+function validISODate(s){
+  if (typeof s!=="string") return false;
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return false;
+  var y=+m[1], mo=+m[2], d=+m[3];
+  if (mo<1||mo>12||d<1||d>31) return false;
+  var dt = new Date(Date.UTC(y, mo-1, d));
+  return dt.getUTCFullYear()===y && dt.getUTCMonth()===mo-1 && dt.getUTCDate()===d;
+}
+function todayStr(){
+  var d = new Date();
+  var mm = String(d.getMonth()+1); if (mm.length<2) mm="0"+mm;
+  var dd = String(d.getDate()); if (dd.length<2) dd="0"+dd;
+  return d.getFullYear()+"-"+mm+"-"+dd;
+}
+var _uid = 1;
+function uid(){ return "j"+Date.now().toString(36)+(_uid++).toString(36)+Math.floor(Math.random()*1e6).toString(36); }
+function materialName(key){
+  for (var i=0;i<MATERIALS.length;i++) if (MATERIALS[i].key===key) return MATERIALS[i].name;
+  return key;
+}
+function patternName(key){
+  for (var i=0;i<PATTERNS.length;i++) if (PATTERNS[i].key===key) return PATTERNS[i].name;
+  return key;
+}
+
+/* ---------- the pricing engine (pure) ---------- */
+function computeRoom(room, settings){
+  var area = clampNonNeg(room.areaOverride) > 0 ? clampNonNeg(room.areaOverride)
+             : clampNonNeg(room.L) * clampNonNeg(room.W);
+  var wastePct = clampNonNeg(room.wastePct);
+  var orderSf = area * (1 + wastePct/100);
+  var preset = (settings.materials && settings.materials[room.material]) || defaultMaterials()[room.material] || {matSell:0,matCost:0,laborSell:0,laborCost:0,boxSf:0};
+  var boxSf = clampNonNeg(room.boxSf);
+  var boxes = boxSf > 0 && orderSf > 0 ? Math.ceil(orderSf/boxSf - 1e-9) : 0;
+  var matSellRate = clampNonNeg(room.matSell);
+  return {
+    name: room.name||"", material: room.material, pattern: room.pattern,
+    area: area, wastePct: wastePct, orderSf: orderSf, boxes: boxes, boxSf: boxSf,
+    sqYd: orderSf/9,
+    matSell: orderSf * matSellRate,
+    matCost: orderSf * clampNonNeg(preset.matCost),
+    laborSell: area * clampNonNeg(preset.laborSell),
+    laborCost: area * clampNonNeg(preset.laborCost)
+  };
+}
+function computeQuote(draft, settings){
+  var rooms = [], i, cr;
+  var t = {netSf:0, orderSf:0, boxes:0, matSell:0, matCost:0, laborSell:0, laborCost:0,
+           extrasSell:0, extrasCost:0, consumables:0, travel:clampNonNeg(draft.travel),
+           costSubtotal:0, overhead:0, trueCost:0, rateCard:0, marginPrice:0,
+           recommended:0, premium:0, floorPrice:0};
+  var list = (draft.rooms && draft.rooms.length) ? draft.rooms : [];
+  for (i=0;i<list.length;i++){
+    cr = computeRoom(list[i], settings);
+    rooms.push(cr);
+    t.netSf += cr.area; t.orderSf += cr.orderSf; t.boxes += cr.boxes;
+    t.matSell += cr.matSell; t.matCost += cr.matCost;
+    t.laborSell += cr.laborSell; t.laborCost += cr.laborCost;
+  }
+  var ex = draft.extras || {};
+  for (i=0;i<EXTRAS_DEF.length;i++){
+    var d = EXTRAS_DEF[i], line = ex[d.key] || {qty:0, price:d.price};
+    t.extrasSell += clampNonNeg(line.qty) * clampNonNeg(line.price);
+  }
+  t.extrasCost = t.extrasSell * clampNonNeg(settings.extrasCostPct)/100;
+  t.consumables = t.matCost * clampNonNeg(draft.consumablesPct)/100;
+  t.costSubtotal = t.matCost + t.laborCost + t.extrasCost + t.consumables + t.travel;
+  t.overhead = t.costSubtotal * clampNonNeg(draft.overheadPct)/100;
+  t.trueCost = t.costSubtotal + t.overhead;
+  t.rateCard = t.matSell + t.laborSell + t.extrasSell;
+  var tm = clampNonNeg(settings.targetMargin); if (tm>=100) tm = 99;
+  t.marginPrice = t.trueCost / (1 - tm/100);
+  t.recommended = Math.max(t.rateCard, t.marginPrice);
+  if (t.recommended < clampNonNeg(settings.minCharge) && t.rateCard > 0) t.recommended = clampNonNeg(settings.minCharge);
+  t.premium = t.recommended * 1.15;
+  var fm = clampNonNeg(settings.floorMargin); if (fm>=100) fm = 99;
+  t.floorPrice = Math.max(t.trueCost / (1 - fm/100), clampNonNeg(settings.minCharge));
+  return {rooms:rooms, totals:t};
+}
+function jobBalance(job){ return r2(clampNonNeg(job.finalPrice) - clampNonNeg(job.collected)); }
+function jobActualCosts(job){ return r2(clampNonNeg(job.actualMat) + clampNonNeg(job.actualLabor) + clampNonNeg(job.actualOther)); }
+function jobProfit(job){
+  var basis = clampNonNeg(job.collected) > 0 ? clampNonNeg(job.collected) : clampNonNeg(job.finalPrice);
+  return r2(basis - jobActualCosts(job));
+}
+function primaryMaterial(job){
+  if (!job.rooms || !job.rooms.length) return "";
+  var best = "", bestArea = -1;
+  for (var i=0;i<job.rooms.length;i++){
+    var a = clampNonNeg(job.rooms[i].areaOverride) > 0 ? clampNonNeg(job.rooms[i].areaOverride) : clampNonNeg(job.rooms[i].L)*clampNonNeg(job.rooms[i].W);
+    if (a > bestArea){ bestArea = a; best = job.rooms[i].material; }
+  }
+  return best;
+}
+
+/* ---------- sanitize / persistence ---------- */
+function sanitizeRoom(r){
+  if (!r || typeof r!=="object") return null;
+  var mat = "lvp", i;
+  for (i=0;i<MATERIALS.length;i++) if (MATERIALS[i].key===r.material) mat = r.material;
+  var pat = "straight";
+  for (i=0;i<PATTERNS.length;i++) if (PATTERNS[i].key===r.pattern) pat = r.pattern;
+  return {name:String(r.name||"").slice(0,80), L:clampNonNeg(r.L), W:clampNonNeg(r.W),
+    areaOverride:clampNonNeg(r.areaOverride), material:mat, pattern:pat,
+    wastePct:Math.min(clampNonNeg(r.wastePct),100), matSell:clampNonNeg(r.matSell), boxSf:clampNonNeg(r.boxSf)};
+}
+function sanitizeExtras(ex){
+  var out = emptyExtras();
+  if (!ex || typeof ex!=="object") return out;
+  for (var i=0;i<EXTRAS_DEF.length;i++){
+    var k = EXTRAS_DEF[i].key;
+    if (ex[k] && typeof ex[k]==="object") out[k] = {qty:clampNonNeg(ex[k].qty), price:clampNonNeg(ex[k].price)};
+  }
+  return out;
+}
+function sanitizeSettings(s){
+  var d = defaultSettings();
+  if (!s || typeof s!=="object") return d;
+  var str = function(v, max){ return typeof v==="string" ? v.slice(0,max) : ""; };
+  var pct = function(v, dflt){ var n = num(v, dflt); return n<0?0:(n>99?99:n); };
+  d.company = str(s.company,80) || d.company; d.phone = str(s.phone,40); d.email = str(s.email,80); d.city = str(s.city,80);
+  d.targetMargin = pct(s.targetMargin, 30); d.floorMargin = pct(s.floorMargin, 15);
+  d.minCharge = clampNonNeg(s.minCharge); d.depositPct = Math.min(clampNonNeg(s.depositPct),100);
+  d.extrasCostPct = Math.min(clampNonNeg(s.extrasCostPct),100);
+  d.travelDefault = clampNonNeg(s.travelDefault);
+  d.consumablesPct = Math.min(clampNonNeg(s.consumablesPct),100);
+  d.overheadPct = Math.min(clampNonNeg(s.overheadPct),100);
+  if (s.materials && typeof s.materials==="object"){
+    for (var i=0;i<MATERIALS.length;i++){
+      var k = MATERIALS[i].key, m = s.materials[k];
+      if (m && typeof m==="object"){
+        d.materials[k] = {matSell:clampNonNeg(m.matSell), matCost:clampNonNeg(m.matCost),
+          laborSell:clampNonNeg(m.laborSell), laborCost:clampNonNeg(m.laborCost), boxSf:clampNonNeg(m.boxSf)};
+      }
+    }
+  }
+  if (s.waste && typeof s.waste==="object"){
+    for (var j=0;j<MATERIALS.length;j++){
+      var mk = MATERIALS[j].key, w = s.waste[mk];
+      if (w && typeof w==="object"){
+        for (var p=0;p<PATTERNS.length;p++){
+          var pk = PATTERNS[p].key;
+          if (w[pk]!==undefined) d.waste[mk][pk] = Math.min(clampNonNeg(w[pk]),100);
+        }
+      }
+    }
+  }
+  return d;
+}
+function sanitizeJob(j, settings){
+  if (!j || typeof j!=="object") return null;
+  if (typeof j.customer!=="string" || !j.customer.trim()) return null;
+  var rooms = [], i;
+  if (Array.isArray(j.rooms)) for (i=0;i<j.rooms.length && i<200;i++){ var sr = sanitizeRoom(j.rooms[i]); if (sr) rooms.push(sr); }
+  var status = "quoted";
+  for (i=0;i<STATUSES.length;i++) if (STATUSES[i]===j.status) status = j.status;
+  return {
+    id: typeof j.id==="string" && j.id ? j.id : uid(),
+    customer: j.customer.slice(0,80), phone:String(j.phone||"").slice(0,40), address:String(j.address||"").slice(0,120),
+    date: validISODate(j.date) ? j.date : "", source:String(j.source||"Google").slice(0,40), desc:String(j.desc||"").slice(0,200),
+    rooms: rooms, extras: sanitizeExtras(j.extras),
+    travel: clampNonNeg(j.travel), consumablesPct: Math.min(clampNonNeg(j.consumablesPct),100), overheadPct: Math.min(clampNonNeg(j.overheadPct),100),
+    finalPrice: clampNonNeg(j.finalPrice), depositDue: (j.depositDue===null||j.depositDue===undefined) ? null : clampNonNeg(j.depositDue),
+    snapshot: (j.snapshot && typeof j.snapshot==="object" && Array.isArray(j.snapshot.rooms)) ? j.snapshot : null,
+    deposit: clampNonNeg(j.deposit), collected: clampNonNeg(j.collected),
+    actualMat: clampNonNeg(j.actualMat), actualLabor: clampNonNeg(j.actualLabor), actualOther: clampNonNeg(j.actualOther),
+    status: status, demo: !!j.demo, createdAt: clampNonNeg(j.createdAt)
+  };
+}
+function sanitizeState(raw){
+  var settings = sanitizeSettings(raw && raw.settings);
+  var jobs = [];
+  if (raw && Array.isArray(raw.jobs)) for (var i=0;i<raw.jobs.length && i<5000;i++){ var sj = sanitizeJob(raw.jobs[i], settings); if (sj) jobs.push(sj); }
+  var draft = blankDraft(settings);
+  if (raw && raw.draft && typeof raw.draft==="object"){
+    var dr = raw.draft;
+    draft.customer = String(dr.customer||"").slice(0,80); draft.phone = String(dr.phone||"").slice(0,40);
+    draft.address = String(dr.address||"").slice(0,120); draft.date = validISODate(dr.date) ? dr.date : "";
+    draft.source = String(dr.source||"Google").slice(0,40); draft.desc = String(dr.desc||"").slice(0,200);
+    draft.editingId = typeof dr.editingId==="string" ? dr.editingId : null;
+    if (Array.isArray(dr.rooms) && dr.rooms.length){ draft.rooms = []; for (var k=0;k<dr.rooms.length && k<200;k++){ var srm = sanitizeRoom(dr.rooms[k]); if (srm) draft.rooms.push(srm); } }
+    if (!draft.rooms.length) draft.rooms = [blankRoom()];
+    draft.extras = sanitizeExtras(dr.extras);
+    draft.travel = clampNonNeg(dr.travel); draft.consumablesPct = Math.min(clampNonNeg(dr.consumablesPct),100);
+    draft.overheadPct = Math.min(clampNonNeg(dr.overheadPct),100);
+    draft.finalPrice = (dr.finalPrice===null||dr.finalPrice===undefined) ? null : clampNonNeg(dr.finalPrice);
+    draft.depositDue = (dr.depositDue===null||dr.depositDue===undefined) ? null : clampNonNeg(dr.depositDue);
+    draft.overrideFloor = !!dr.overrideFloor;
+  }
+  return {settings:settings, jobs:jobs, draft:draft, legal:(raw && raw.legal) || null};
+}
+
+/* ---------- seed (demo) data ---------- */
+function snapshotFromQuote(q, finalPrice, depositDue){
+  return { rooms: JSON.parse(JSON.stringify(q.rooms)), finalPrice: r2(finalPrice),
+    depositDue: (depositDue===null||depositDue===undefined) ? null : r2(depositDue), totals: JSON.parse(JSON.stringify(q.totals)) };
+}
+function makeJobFromDraft(draft, settings, status, demo){
+  var q = computeQuote(draft, settings);
+  var fp = r2(q.totals.recommended);
+  var depDue = r2(fp * settings.depositPct/100);
+  return {
+    id: uid(), customer: draft.customer, phone: draft.phone, address: draft.address, date: draft.date,
+    source: draft.source, desc: draft.desc,
+    rooms: JSON.parse(JSON.stringify(draft.rooms)), extras: JSON.parse(JSON.stringify(draft.extras)),
+    travel: draft.travel, consumablesPct: draft.consumablesPct, overheadPct: draft.overheadPct,
+    finalPrice: fp, depositDue: depDue, snapshot: snapshotFromQuote(q, fp, depDue), deposit: 0, collected: 0,
+    actualMat: 0, actualLabor: 0, actualOther: 0,
+    status: status, demo: !!demo, createdAt: Date.now()
+  };
+}
+function companyIsPlaceholder(name){
+  var n = String(name||"").trim();
+  return !n || n === "Your Flooring Company" || n === "Ridge Line Flooring";
+}
+function seedState(){
+  var settings = defaultSettings();
+  settings.city = "Serving the metro area";
+  var jobs = [];
+  var d1 = blankDraft(settings);
+  d1.customer = "Sarah Mitchell"; d1.phone = "(555) 014-2280"; d1.address = "412 Willow Creek Dr"; d1.date = todayStr();
+  d1.source = "Referral"; d1.desc = "Main floor LVP — living room + hall";
+  d1.rooms = [
+    {name:"Living Room", L:12, W:15, areaOverride:0, material:"lvp", pattern:"straight", wastePct:8, matSell:3.20, boxSf:24},
+    {name:"Hall", L:10, W:6, areaOverride:0, material:"lvp", pattern:"straight", wastePct:8, matSell:3.20, boxSf:24}
+  ];
+  d1.extras = emptyExtras();
+  d1.extras.transitions = {qty:3, price:12}; d1.extras.underlayment = {qty:240, price:0.55}; d1.extras.removal = {qty:240, price:1.25};
+  jobs.push(makeJobFromDraft(d1, settings, "quoted", true));
+  var d2 = blankDraft(settings);
+  d2.customer = "David Okafor"; d2.phone = "(555) 011-9043"; d2.address = "78 Birch Hollow Ln"; d2.date = todayStr();
+  d2.source = "Google"; d2.desc = "Tile kitchen + bath, diagonal in kitchen";
+  d2.rooms = [
+    {name:"Kitchen", L:12, W:14, areaOverride:0, material:"tile", pattern:"diagonal", wastePct:15, matSell:4.25, boxSf:15},
+    {name:"Bath", L:8, W:5, areaOverride:0, material:"tile", pattern:"straight", wastePct:10, matSell:4.25, boxSf:15}
+  ];
+  d2.extras = emptyExtras();
+  d2.extras.transitions = {qty:2, price:12}; d2.extras.prep = {qty:1, price:150};
+  var j2 = makeJobFromDraft(d2, settings, "booked", true);
+  j2.deposit = r2(j2.finalPrice * settings.depositPct/100); j2.collected = j2.deposit;
+  jobs.push(j2);
+  var d3 = blankDraft(settings);
+  d3.customer = "The Hendersons"; d3.phone = "(555) 019-3371"; d3.address = "1205 Sycamore Ct"; d3.date = todayStr();
+  d3.source = "Repeat customer"; d3.desc = "Hardwood great room";
+  d3.rooms = [
+    {name:"Great Room", L:16, W:20, areaOverride:0, material:"hardwood", pattern:"straight", wastePct:10, matSell:5.90, boxSf:21}
+  ];
+  d3.extras = emptyExtras();
+  d3.extras.baseboard = {qty:90, price:2.25}; d3.extras.transitions = {qty:2, price:12}; d3.extras.furniture = {qty:1, price:150};
+  var j3 = makeJobFromDraft(d3, settings, "completed", true);
+  j3.collected = j3.finalPrice; j3.deposit = r2(j3.finalPrice * settings.depositPct/100);
+  j3.actualMat = 1512.30; j3.actualLabor = 905.00; j3.actualOther = 88.40;
+  jobs.push(j3);
+  return {settings:settings, jobs:jobs, draft:blankDraft(settings)};
+}
+
+/* ---------- state load/save ---------- */
+var state;
+function save(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){}
+}
+function load(){
+  var raw = null;
+  try { raw = localStorage.getItem(STORE_KEY); } catch(e){}
+  if (!raw){ state = seedState(); save(); return; }
+  try { state = sanitizeState(JSON.parse(raw)); }
+  catch(e){ state = seedState(); }
+}
+
+/* ---------- UI: tabs ---------- */
+function $(id){ return document.getElementById(id); }
+function showTab(name){
+  var tabs = ["quote","jobs","dash","settings","help"], i;
+  for (i=0;i<tabs.length;i++){
+    var sec = $("tab-"+tabs[i]);
+    if (sec) sec.className = (tabs[i]===name) ? "" : "hidden";
+  }
+  var btns = document.querySelectorAll("#tabs button"), b;
+  for (i=0;i<btns.length;i++){
+    b = btns[i];
+    if (b.getAttribute("data-tab")===name) b.className = "active"; else b.className = "";
+  }
+  if (name==="jobs") renderJobs();
+  if (name==="dash") renderDash();
+  if (name==="settings") renderSettings();
+}
+
+/* ---------- UI: quote builder ---------- */
+var finalTouched = false, depositTouched = false;
+function presetFor(matKey){ return state.settings.materials[matKey] || defaultMaterials()[matKey]; }
+function wasteFor(matKey, patKey){
+  var w = state.settings.waste[matKey];
+  return (w && w[patKey]!==undefined) ? w[patKey] : 10;
+}
+function roomLineText(cr){
+  var parts = [];
+  parts.push(fmtSf(cr.area)+" sf net → order "+fmtSf(cr.orderSf)+" sf (+"+cr.wastePct+"% waste)");
+  if (cr.boxSf>0) parts.push(cr.boxes+" box"+(cr.boxes===1?"":"es")+" @ "+cr.boxSf+" sf");
+  else parts.push((Math.round(cr.sqYd*10)/10)+" sq yd");
+  parts.push("material "+money(cr.matSell)+" · labor "+money(cr.laborSell));
+  return parts.join(" · ");
+}
+function renderRooms(){
+  var wrap = $("roomList"); if (!wrap) return;
+  var html = "", i, r;
+  for (i=0;i<state.draft.rooms.length;i++){
+    r = state.draft.rooms[i];
+    var matOpts = "", patOpts = "", j;
+    for (j=0;j<MATERIALS.length;j++) matOpts += '<option value="'+MATERIALS[j].key+'"'+(MATERIALS[j].key===r.material?" selected":"")+">"+esc(MATERIALS[j].name)+"</option>";
+    for (j=0;j<PATTERNS.length;j++) patOpts += '<option value="'+PATTERNS[j].key+'"'+(PATTERNS[j].key===r.pattern?" selected":"")+">"+esc(PATTERNS[j].name)+"</option>";
+    html += '<div class="roomcard">'
+      + '<div class="rowflex"><b>Room '+(i+1)+'</b><span class="spacer"></span>'
+      + '<button class="btn ghost small" type="button" data-duproom="'+i+'">Duplicate room</button>'
+      + '<button class="btn ghost small" type="button" data-delroom="'+i+'">Remove room</button></div>'
+      + '<div class="grid3" style="margin-top:8px">'
+      + '<div><label>Room name</label><input type="text" data-r="'+i+'" data-f="name" value="'+esc(r.name)+'" placeholder="Living Room"></div>'
+      + '<div><label>Length (ft)</label><input inputmode="decimal" type="number" min="0" step="0.1" data-r="'+i+'" data-f="L" value="'+(r.L||"")+'"></div>'
+      + '<div><label>Width (ft)</label><input inputmode="decimal" type="number" min="0" step="0.1" data-r="'+i+'" data-f="W" value="'+(r.W||"")+'"></div>'
+      + '<div><label>…or measured sq ft (odd shapes)</label><input inputmode="decimal" type="number" min="0" step="1" data-r="'+i+'" data-f="areaOverride" value="'+(r.areaOverride||"")+'" placeholder="overrides L × W"></div>'
+      + '<div><label>Material</label><select data-r="'+i+'" data-f="material">'+matOpts+'</select></div>'
+      + '<div><label>Pattern</label><select data-r="'+i+'" data-f="pattern">'+patOpts+'</select></div>'
+      + '<div><label>Waste %</label><input inputmode="decimal" type="number" min="0" max="100" step="0.5" data-r="'+i+'" data-f="wastePct" value="'+r.wastePct+'"></div>'
+      + '<div><label>Material sell $/sf</label><input inputmode="decimal" type="number" min="0" step="0.05" data-r="'+i+'" data-f="matSell" value="'+r.matSell+'"></div>'
+      + '<div><label>Box coverage (sf, 0 = roll goods)</label><input inputmode="decimal" type="number" min="0" step="1" data-r="'+i+'" data-f="boxSf" value="'+r.boxSf+'"></div>'
+      + '</div>'
+      + '<div class="roomline" id="rl-'+i+'"></div>'
+      + '</div>';
+  }
+  wrap.innerHTML = html;
+  for (i=0;i<state.draft.rooms.length;i++) updateRoomLine(i);
+}
+function updateRoomLine(i){
+  var el = $("rl-"+i); if (!el) return;
+  var cr = computeRoom(state.draft.rooms[i], state.settings);
+  el.textContent = roomLineText(cr);
+}
+function renderExtras(){
+  var wrap = $("extrasList"); if (!wrap) return;
+  var html = '<div class="tablewrap"><table><thead><tr><th>Extra</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Line total</th></tr></thead><tbody>';
+  for (var i=0;i<EXTRAS_DEF.length;i++){
+    var d = EXTRAS_DEF[i], line = state.draft.extras[d.key] || {qty:0, price:d.price};
+    html += '<tr><td>'+esc(d.label)+' <span class="muted">('+esc(d.unit)+')</span></td>'
+      + '<td class="num"><input inputmode="decimal" type="number" min="0" step="any" data-ex="'+d.key+'" data-ef="qty" value="'+(line.qty||"")+'" style="width:90px;text-align:right"></td>'
+      + '<td class="num"><input inputmode="decimal" type="number" min="0" step="any" data-ex="'+d.key+'" data-ef="price" value="'+line.price+'" style="width:90px;text-align:right"></td>'
+      + '<td class="num" id="exl-'+d.key+'">'+money(clampNonNeg(line.qty)*clampNonNeg(line.price))+'</td></tr>';
+  }
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+}
+function readQuoteForm(){
+  var d = state.draft;
+  d.customer = $("qCustomer").value; d.phone = $("qPhone").value; d.address = $("qAddress").value;
+  d.date = $("qDate").value; d.source = $("qSource").value; d.desc = $("qDesc").value;
+  d.travel = clampNonNeg($("qTravel").value);
+  d.consumablesPct = Math.min(clampNonNeg($("qConsumablesPct").value),100);
+  d.overheadPct = Math.min(clampNonNeg($("qOverheadPct").value),100);
+}
+function fillQuoteForm(){
+  var d = state.draft;
+  $("qCustomer").value = d.customer||""; $("qPhone").value = d.phone||""; $("qAddress").value = d.address||"";
+  $("qDate").value = d.date||""; $("qSource").value = d.source||"Google"; $("qDesc").value = d.desc||"";
+  $("qTravel").value = d.travel; $("qConsumablesPct").value = d.consumablesPct; $("qOverheadPct").value = d.overheadPct;
+  finalTouched = d.finalPrice!==null && d.finalPrice!==undefined;
+  depositTouched = d.depositDue!==null && d.depositDue!==undefined;
+  renderRooms(); renderExtras(); updateTotals();
+}
+function currentQuote(){ readQuoteForm(); return computeQuote(state.draft, state.settings); }
+function updateTotals(){
+  var q = currentQuote(), t = q.totals, s = state.settings;
+  var html = "";
+  html += '<div class="priceline"><span>Material — sell '+money(t.matSell)+' on '+fmtSf(t.orderSf)+' sf ordered ('+t.boxes+' boxes total)</span><b>cost '+money(t.matCost)+'</b></div>';
+  html += '<div class="priceline"><span>Labor — sell '+money(t.laborSell)+' on '+fmtSf(t.netSf)+' sf installed</span><b>cost '+money(t.laborCost)+'</b></div>';
+  html += '<div class="priceline"><span>Extras — sell '+money(t.extrasSell)+'</span><b>cost '+money(t.extrasCost)+'</b></div>';
+  html += '<div class="priceline"><span>Consumables ('+state.draft.consumablesPct+'% of material cost)</span><b>'+money(t.consumables)+'</b></div>';
+  html += '<div class="priceline"><span>Travel</span><b>'+money(t.travel)+'</b></div>';
+  html += '<div class="priceline"><span>Overhead ('+state.draft.overheadPct+'%)</span><b>'+money(t.overhead)+'</b></div>';
+  html += '<div class="priceline"><span><b>True cost (break-even)</b></span><b>'+money(t.trueCost)+'</b></div>';
+  html += '<div class="priceline"><span>Itemized rate-card total</span><b>'+money(t.rateCard)+'</b></div>';
+  html += '<div class="priceline"><span>Price at target margin ('+s.targetMargin+'%)</span><b>'+money(t.marginPrice)+'</b></div>';
+  $("costBreakdown").innerHTML = html;
+  $("takeoffSummary").textContent = fmtSf(t.netSf)+" sf net · "+fmtSf(t.orderSf)+" sf to order · "+t.boxes+" boxes";
+  $("pBreakEven").textContent = money(t.trueCost);
+  $("pRecommended").textContent = money(t.recommended);
+  $("pPremium").textContent = money(t.premium);
+  var finalEl = $("qFinalPrice"), depEl = $("qDepositDue");
+  if (!finalTouched){ finalEl.value = r2(t.recommended); state.draft.finalPrice = r2(t.recommended); }
+  var finalPrice = clampNonNeg(finalEl.value);
+  if (!depositTouched){ depEl.value = r2(finalPrice * s.depositPct/100); state.draft.depositDue = r2(finalPrice * s.depositPct/100); }
+  var box = $("floorBox");
+  if (finalPrice >= t.floorPrice - 0.005){
+    var profit = finalPrice - t.trueCost;
+    var margin = finalPrice>0 ? Math.round(profit/finalPrice*1000)/10 : 0;
+    box.innerHTML = '<div class="floorok">✔ At '+money(finalPrice)+' this job clears your profit floor ('+money(t.floorPrice)+'). Expected profit <b>'+money(profit)+'</b> — a '+margin+'% margin.</div>';
+  } else {
+    box.innerHTML = '<div class="floorwarn">⚠ <b>'+money(finalPrice)+' is below your profit floor of '+money(t.floorPrice)+'</b> (the price that delivers your '+s.floorMargin+'% minimum margin). '
+      + 'Raise the price, or tick the override to save it anyway: <label style="display:inline;color:var(--ink)"><input type="checkbox" id="overrideFloor" style="width:auto" '+(state.draft.overrideFloor?"checked":"")+'> This discount is deliberate — save below the floor</label></div>';
+    var oc = $("overrideFloor");
+    if (oc) oc.addEventListener("change", function(){ state.draft.overrideFloor = oc.checked; save(); });
+  }
+  save();
+}
+
+function saveQuote(){
+  readQuoteForm();
+  var d = state.draft, note = $("saveNote");
+  if (!d.customer || !d.customer.trim()){ note.textContent = "Enter the customer's name first."; return; }
+  var q = computeQuote(d, state.settings);
+  var finalPrice = clampNonNeg($("qFinalPrice").value);
+  var depositDue = clampNonNeg($("qDepositDue").value);
+  if (finalPrice < q.totals.floorPrice - 0.005 && !d.overrideFloor){
+    note.textContent = "Blocked: that price is below your profit floor ("+money(q.totals.floorPrice)+"). Raise it or tick the deliberate-discount override.";
+    return;
+  }
+  d.finalPrice = r2(finalPrice); d.depositDue = r2(depositDue);
+  if (d.editingId){
+    for (var i=0;i<state.jobs.length;i++){
+      if (state.jobs[i].id===d.editingId){
+        var j = state.jobs[i];
+        j.customer=d.customer; j.phone=d.phone; j.address=d.address; j.date=d.date; j.source=d.source; j.desc=d.desc;
+        j.rooms = JSON.parse(JSON.stringify(d.rooms)); j.extras = JSON.parse(JSON.stringify(d.extras));
+        j.travel=d.travel; j.consumablesPct=d.consumablesPct; j.overheadPct=d.overheadPct;
+        j.finalPrice = r2(finalPrice); j.depositDue = r2(depositDue); j.snapshot = snapshotFromQuote(q, finalPrice, depositDue);
+        note.textContent = "Updated "+j.customer+" in the Job Book.";
+        break;
+      }
+    }
+  } else {
+    var nj = {id:uid(), customer:d.customer, phone:d.phone, address:d.address, date:d.date, source:d.source, desc:d.desc,
+      rooms:JSON.parse(JSON.stringify(d.rooms)), extras:JSON.parse(JSON.stringify(d.extras)),
+      travel:d.travel, consumablesPct:d.consumablesPct, overheadPct:d.overheadPct,
+      finalPrice:r2(finalPrice), depositDue:r2(depositDue), snapshot:snapshotFromQuote(q, finalPrice, depositDue), deposit:0, collected:0, actualMat:0, actualLabor:0, actualOther:0,
+      status:"quoted", demo:false, createdAt:Date.now()};
+    state.jobs.unshift(nj);
+    d.editingId = nj.id;
+    note.textContent = "Saved — "+nj.customer+" is in the Job Book as Quoted.";
+  }
+  save();
+}
+function loadJobIntoBuilder(job){
+  state.draft = {editingId:job.id, customer:job.customer, phone:job.phone, address:job.address, date:job.date,
+    source:job.source, desc:job.desc, rooms:JSON.parse(JSON.stringify(job.rooms)), extras:JSON.parse(JSON.stringify(job.extras)),
+    travel:job.travel, consumablesPct:job.consumablesPct, overheadPct:job.overheadPct,
+    finalPrice:job.finalPrice, depositDue:(job.depositDue!==null && job.depositDue!==undefined) ? job.depositDue : ((job.snapshot && job.snapshot.depositDue!==null && job.snapshot.depositDue!==undefined) ? job.snapshot.depositDue : r2(job.finalPrice * state.settings.depositPct/100)), overrideFloor:false};
+  save(); fillQuoteForm(); showTab("quote");
+  $("saveNote").textContent = "Loaded "+job.customer+" — edits update the saved job.";
+}
+function buildPrintSheet(jobLike, settings){
+  var useSnap = !!(jobLike.snapshot && Array.isArray(jobLike.snapshot.rooms) && jobLike.snapshot.rooms.length);
+  var q = computeQuote(jobLike, settings), t = q.totals;
+  var printRooms = useSnap ? jobLike.snapshot.rooms : q.rooms;
+  var finalPrice = clampNonNeg(useSnap && jobLike.snapshot.finalPrice!==null && jobLike.snapshot.finalPrice!==undefined ? jobLike.snapshot.finalPrice : (jobLike.finalPrice!==null && jobLike.finalPrice!==undefined ? jobLike.finalPrice : t.recommended));
+  var storedDep = (useSnap && jobLike.snapshot.depositDue!==null && jobLike.snapshot.depositDue!==undefined) ? jobLike.snapshot.depositDue : ((jobLike.depositDue!==null && jobLike.depositDue!==undefined) ? jobLike.depositDue : null);
+  var dep = storedDep!==null ? r2(storedDep) : r2(finalPrice * settings.depositPct/100);
+  var h = "";
+  if (companyIsPlaceholder(settings.company)) h += "<div style='border:2px solid #b3261e;color:#b3261e;padding:8px;font-weight:700;margin-bottom:10px'>\u26a0 DEMO \u2014 set your business name in Settings before sending this to a customer.</div>";
+  h += "<h1>"+esc(settings.company)+"</h1>";
+  h += "<div>"+esc(settings.city)+(settings.phone?" · "+esc(settings.phone):"")+(settings.email?" · "+esc(settings.email):"")+"</div>";
+  h += "<h2 style='margin:14px 0 4px'>Flooring quote</h2>";
+  h += "<div><b>"+esc(jobLike.customer)+"</b>"+(jobLike.address?" · "+esc(jobLike.address):"")+(jobLike.date?" · "+esc(jobLike.date):"")+"</div>";
+  if (jobLike.desc) h += "<div>"+esc(jobLike.desc)+"</div>";
+  h += "<table style='margin-top:10px'><thead><tr><th>Room</th><th>Material / pattern</th><th class='num'>Net sf</th><th class='num'>Material</th><th class='num'>Labor</th></tr></thead><tbody>";
+  for (var i=0;i<printRooms.length;i++){
+    var cr = printRooms[i], src = jobLike.rooms[i] || {};
+    h += "<tr><td>"+esc(src.name||("Room "+(i+1)))+"</td><td>"+esc(materialName(cr.material))+" — "+esc(patternName(cr.pattern))+"</td>"
+      + "<td class='num'>"+fmtSf(cr.area)+"</td>"
+      + "<td class='num'>"+money(cr.matSell)+"</td><td class='num'>"+money(cr.laborSell)+"</td></tr>";
+  }
+  h += "</tbody></table>";
+  var ex = jobLike.extras || {}, anyEx = false, exRows = "";
+  for (var k=0;k<EXTRAS_DEF.length;k++){
+    var def = EXTRAS_DEF[k], line = ex[def.key];
+    if (line && clampNonNeg(line.qty)>0){
+      anyEx = true;
+      exRows += "<div class='priceline' style='display:flex;justify-content:space-between;border-bottom:1px dashed #bbb;padding:5px 0'><span>"+esc(def.label)+" — "+line.qty+" × "+money(line.price)+"</span><b>"+money(clampNonNeg(line.qty)*clampNonNeg(line.price))+"</b></div>";
+    }
+  }
+  if (anyEx) h += "<h3 style='margin:12px 0 4px'>Extras</h3>" + exRows;
+  h += "<div style='margin-top:12px;font-size:15px'><div style='display:flex;justify-content:space-between'><span><b>Total price</b></span><b>"+money(finalPrice)+"</b></div>"
+     + "<div style='display:flex;justify-content:space-between'><span>Deposit due at booking</span><b>"+money(dep)+"</b></div>"
+     + "<div style='display:flex;justify-content:space-between'><span>Balance on completion</span><b>"+money(finalPrice-dep)+"</b></div></div>";
+  h += "<p style='margin-top:14px;font-size:12px'>Quote covers the rooms and extras listed above, materials as specified, and standard installation. Subfloor repair beyond the prep listed, moisture remediation, and unforeseen conditions are quoted separately if found. Prices valid 30 days.</p>";
+  h += "<div style='margin-top:26px;display:flex;gap:40px'><div style='flex:1;border-top:1px solid #000;padding-top:4px'>Customer signature / date</div><div style='flex:1;border-top:1px solid #000;padding-top:4px'>"+esc(settings.company)+"</div></div>";
+  return h;
+}
+function printDraft(){
+  readQuoteForm();
+  var d = state.draft;
+  var like = {customer:d.customer, address:d.address, date:d.date, desc:d.desc, rooms:d.rooms, extras:d.extras,
+    travel:d.travel, consumablesPct:d.consumablesPct, overheadPct:d.overheadPct,
+    finalPrice: clampNonNeg($("qFinalPrice").value), depositDue: clampNonNeg($("qDepositDue").value)};
+  $("printSheet").innerHTML = buildPrintSheet(like, state.settings);
+  window.print();
+}
+function printJob(job){
+  var like = {customer:job.customer, address:job.address, date:job.date, desc:job.desc, rooms:job.rooms, extras:job.extras,
+    travel:job.travel, consumablesPct:job.consumablesPct, overheadPct:job.overheadPct, finalPrice:job.finalPrice,
+    depositDue:(job.depositDue!==undefined?job.depositDue:null), snapshot:(job.snapshot||null)};
+  $("printSheet").innerHTML = buildPrintSheet(like, state.settings);
+  window.print();
+}
+
+/* ---------- UI: job book ---------- */
+function renderJobs(){
+  var wrap = $("jobList"); if (!wrap) return;
+  var html = "";
+  for (var i=0;i<state.jobs.length;i++){
+    var j = state.jobs[i];
+    var bal = jobBalance(j);
+    html += '<div class="jobcard">'
+      + '<div class="jobhead" data-toggle="'+j.id+'"><b>'+esc(j.customer)+'</b>'
+      + '<span class="tag '+j.status+'">'+j.status+'</span>'
+      + (j.demo?'<span class="tag">demo</span>':"")
+      + '<span class="muted">'+esc(j.date||"")+'</span><span class="spacer"></span>'
+      + '<span><b>'+money(j.finalPrice)+'</b>'+(bal>0?' · <span style="color:var(--bad)">'+money(bal)+' due</span>':' · <span style="color:var(--good)">paid in full</span>')+'</span></div>'
+      + '<div class="jobbody" id="jb-'+j.id+'">'
+      + '<div class="muted">'+esc(materialName(primaryMaterial(j)))+' · '+esc(j.desc||"")+(j.address?" · "+esc(j.address):"")+(j.phone?" · "+esc(j.phone):"")+'</div>'
+      + '<div class="grid3" style="margin-top:8px">'
+      + '<div><label>Status</label><select data-jf="'+j.id+'" data-k="status">'
+      + STATUSES.map(function(st){ return '<option value="'+st+'"'+(st===j.status?" selected":"")+">"+st+"</option>"; }).join("")
+      + '</select></div>'
+      + '<div><label>Deposit received ($)</label><input inputmode="decimal" type="number" min="0" step="any" data-jf="'+j.id+'" data-k="deposit" value="'+(j.deposit||"")+'"></div>'
+      + '<div><label>Total collected ($)</label><input inputmode="decimal" type="number" min="0" step="any" data-jf="'+j.id+'" data-k="collected" value="'+(j.collected||"")+'"></div>'
+      + '<div><label>Actual material cost ($)</label><input inputmode="decimal" type="number" min="0" step="any" data-jf="'+j.id+'" data-k="actualMat" value="'+(j.actualMat||"")+'"></div>'
+      + '<div><label>Actual labor cost ($)</label><input inputmode="decimal" type="number" min="0" step="any" data-jf="'+j.id+'" data-k="actualLabor" value="'+(j.actualLabor||"")+'"></div>'
+      + '<div><label>Actual other cost ($)</label><input inputmode="decimal" type="number" min="0" step="any" data-jf="'+j.id+'" data-k="actualOther" value="'+(j.actualOther||"")+'"></div>'
+      + '</div>'
+      + '<div class="priceline"><span>Balance due</span><b>'+money(bal)+'</b></div>'
+      + '<div class="priceline"><span>True profit (collected − actual costs, once actuals are in)</span><b>'+money(jobProfit(j))+'</b></div>'
+      + '<div class="rowflex" style="margin-top:8px">'
+      + '<button class="btn small" type="button" data-savejob="'+j.id+'">Save changes</button>'
+      + '<button class="btn alt small" type="button" data-loadjob="'+j.id+'">Open in quote builder</button>'
+      + '<button class="btn ghost small" type="button" data-printjob="'+j.id+'">Print quote</button>'
+      + '<button class="btn ghost small" type="button" data-deljob="'+j.id+'">Delete</button>'
+      + '</div></div></div>';
+  }
+  wrap.innerHTML = html;
+  $("jobEmpty").textContent = state.jobs.length ? "" : "No jobs yet. Build a quote and save it — it lands here.";
+}
+function findJob(id){ for (var i=0;i<state.jobs.length;i++) if (state.jobs[i].id===id) return state.jobs[i]; return null; }
+
+/* ---------- UI: dashboard ---------- */
+function renderDash(){
+  var quoted=0, quotedVal=0, bookedVal=0, collected=0, owed=0, completed=0, lost=0, profitSum=0, profitCount=0;
+  var owedRows = "", profitRows = "";
+  for (var i=0;i<state.jobs.length;i++){
+    var j = state.jobs[i];
+    if (j.status==="quoted"){ quoted++; quotedVal += j.finalPrice; }
+    if (j.status==="booked"){ bookedVal += j.finalPrice; }
+    if (j.status==="completed"){ completed++; var p = jobProfit(j); profitSum += p; profitCount++; }
+    if (j.status==="lost"){ lost++; }
+    collected += clampNonNeg(j.collected);
+    var bal = jobBalance(j);
+    if (bal > 0 && j.status!=="lost"){
+      owed += bal;
+      owedRows += "<tr><td>"+esc(j.customer)+"</td><td>"+j.status+"</td><td class='num'>"+money(j.finalPrice)+"</td><td class='num'>"+money(j.collected)+"</td><td class='num'>"+money(bal)+"</td></tr>";
+    }
+    if (j.status==="completed"){
+      var ac = jobActualCosts(j), basis = clampNonNeg(j.collected)>0 ? j.collected : j.finalPrice;
+      var mg = basis>0 ? Math.round((p/basis)*1000)/10 : 0;
+      profitRows += "<tr><td>"+esc(j.customer)+"</td><td>"+esc(materialName(primaryMaterial(j)))+"</td><td class='num'>"+money(j.finalPrice)+"</td><td class='num'>"+money(ac)+"</td><td class='num'>"+money(p)+"</td><td class='num'>"+mg+"%</td></tr>";
+    }
+  }
+  var decided = completed + lost;
+  var winRate = decided>0 ? Math.round(completed/decided*100)+"%" : "—";
+  var avgProfit = profitCount>0 ? money(profitSum/profitCount) : "—";
+  var stats = [
+    ["Quoted (open)", quoted+" jobs · "+money(quotedVal)],
+    ["Booked value", money(bookedVal)],
+    ["Collected to date", money(collected)],
+    ["Still owed to you", money(owed)],
+    ["Completed jobs", String(completed)],
+    ["Avg true profit / completed job", avgProfit],
+    ["Win rate (completed vs lost)", winRate],
+    ["Total jobs in book", String(state.jobs.length)]
+  ];
+  var html = "";
+  for (var k=0;k<stats.length;k++) html += '<div class="stat"><div class="lab">'+stats[k][0]+'</div><div class="val">'+stats[k][1]+'</div></div>';
+  $("dashStats").innerHTML = html;
+  var pt = document.querySelector("#dashProfitTable tbody"); if (pt) pt.innerHTML = profitRows;
+  var ot = document.querySelector("#dashOwedTable tbody"); if (ot) ot.innerHTML = owedRows;
+  $("dashProfitEmpty").textContent = profitRows ? "" : "No completed jobs yet — finish a job and enter its actual costs to see true profit here.";
+  $("dashOwedEmpty").textContent = owedRows ? "" : "Nobody owes you anything right now.";
+}
+
+/* ---------- UI: settings ---------- */
+function renderSettings(){
+  var s = state.settings;
+  $("sCompany").value = s.company; $("sPhone").value = s.phone; $("sEmail").value = s.email; $("sCity").value = s.city;
+  $("sTargetMargin").value = s.targetMargin; $("sFloorMargin").value = s.floorMargin; $("sMinCharge").value = s.minCharge;
+  $("sDepositPct").value = s.depositPct; $("sExtrasCostPct").value = s.extrasCostPct; $("sTravelDefault").value = s.travelDefault;
+  var mt = document.querySelector("#matTable tbody"); if (!mt) return;
+  var html = "", i, j;
+  for (i=0;i<MATERIALS.length;i++){
+    var k = MATERIALS[i].key, m = s.materials[k];
+    html += "<tr><td>"+esc(MATERIALS[i].name)+"</td>"
+      + '<td class="num"><input inputmode="decimal" type="number" min="0" step="any" data-mat="'+k+'" data-mf="matSell" value="'+m.matSell+'" style="width:84px;text-align:right"></td>'
+      + '<td class="num"><input inputmode="decimal" type="number" min="0" step="any" data-mat="'+k+'" data-mf="matCost" value="'+m.matCost+'" style="width:84px;text-align:right"></td>'
+      + '<td class="num"><input inputmode="decimal" type="number" min="0" step="any" data-mat="'+k+'" data-mf="laborSell" value="'+m.laborSell+'" style="width:84px;text-align:right"></td>'
+      + '<td class="num"><input inputmode="decimal" type="number" min="0" step="any" data-mat="'+k+'" data-mf="laborCost" value="'+m.laborCost+'" style="width:84px;text-align:right"></td>'
+      + '<td class="num"><input inputmode="decimal" type="number" min="0" step="any" data-mat="'+k+'" data-mf="boxSf" value="'+m.boxSf+'" style="width:84px;text-align:right"></td></tr>';
+  }
+  mt.innerHTML = html;
+  var wt = document.querySelector("#wasteTable tbody"); if (!wt) return;
+  html = "";
+  for (i=0;i<MATERIALS.length;i++){
+    var mk = MATERIALS[i].key;
+    html += "<tr><td>"+esc(MATERIALS[i].name)+"</td>";
+    for (j=0;j<PATTERNS.length;j++){
+      var pk = PATTERNS[j].key;
+      html += '<td class="num"><input inputmode="decimal" type="number" min="0" max="100" step="any" data-wmat="'+mk+'" data-wpat="'+pk+'" value="'+s.waste[mk][pk]+'" style="width:72px;text-align:right"></td>';
+    }
+    html += "</tr>";
+  }
+  wt.innerHTML = html;
+}
+function readSettingsForm(){
+  var s = state.settings;
+  s.company = $("sCompany").value; s.phone = $("sPhone").value; s.email = $("sEmail").value; s.city = $("sCity").value;
+  var pc = function(v, d){ var n = num(v, d); return n<0?0:(n>99?99:n); };
+  s.targetMargin = pc($("sTargetMargin").value, 30); s.floorMargin = pc($("sFloorMargin").value, 15);
+  s.minCharge = clampNonNeg($("sMinCharge").value); s.depositPct = Math.min(clampNonNeg($("sDepositPct").value),100);
+  s.extrasCostPct = Math.min(clampNonNeg($("sExtrasCostPct").value),100); s.travelDefault = clampNonNeg($("sTravelDefault").value);
+  var inputs = document.querySelectorAll("[data-mat]"), i, el;
+  for (i=0;i<inputs.length;i++){ el = inputs[i]; var mk = el.getAttribute("data-mat"), mf = el.getAttribute("data-mf"); if (s.materials[mk]) s.materials[mk][mf] = clampNonNeg(el.value); }
+  inputs = document.querySelectorAll("[data-wmat]");
+  for (i=0;i<inputs.length;i++){ el = inputs[i]; var wk = el.getAttribute("data-wmat"), wp = el.getAttribute("data-wpat"); if (s.waste[wk]) s.waste[wk][wp] = Math.min(clampNonNeg(el.value),100); }
+  state.settings = sanitizeSettings(s);
+}
+
+/* ---------- data ops ---------- */
+function exportBackup(){
+  try {
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "floorbook-backup.json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} }, 500);
+    $("dataNote").textContent = "Backup exported — keep the file somewhere safe.";
+  } catch(e){ $("dataNote").textContent = "Export isn't available in this browser."; }
+}
+function importBackup(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try {
+      var parsed = JSON.parse(reader.result);
+      if (!parsed || typeof parsed!=="object" || (!parsed.settings && !parsed.jobs)) throw new Error("shape");
+      state = sanitizeState(parsed);
+      save(); fillQuoteForm(); renderJobs(); renderDash(); renderSettings();
+      $("dataNote").textContent = "Backup imported.";
+    } catch(e){ $("dataNote").textContent = "That file isn't a valid FloorBook backup — nothing was changed."; }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- wiring ---------- */
+function init(){
+  load();
+  var navBtns = document.querySelectorAll("#tabs button");
+  for (var n=0;n<navBtns.length;n++){
+    (function(btn){ btn.addEventListener("click", function(){ showTab(btn.getAttribute("data-tab")); }); })(navBtns[n]);
+  }
+  $("addRoomBtn").addEventListener("click", function(){
+    readQuoteForm();
+    var r = blankRoom();
+    var last = state.draft.rooms[state.draft.rooms.length-1];
+    if (last){ r.material = last.material; r.pattern = last.pattern; }
+    var p = presetFor(r.material);
+    r.wastePct = wasteFor(r.material, r.pattern); r.matSell = p.matSell; r.boxSf = p.boxSf;
+    state.draft.rooms.push(r); renderRooms(); updateTotals();
+  });
+  $("roomList").addEventListener("click", function(ev){
+    var dup = ev.target && ev.target.getAttribute ? ev.target.getAttribute("data-duproom") : null;
+    if (dup!==null && dup!==undefined){
+      readQuoteForm();
+      var srcRoom = state.draft.rooms[parseInt(dup,10)];
+      if (srcRoom) state.draft.rooms.splice(parseInt(dup,10)+1, 0, JSON.parse(JSON.stringify(srcRoom)));
+      renderRooms(); updateTotals();
+      return;
+    }
+    var del = ev.target && ev.target.getAttribute ? ev.target.getAttribute("data-delroom") : null;
+    if (del!==null && del!==undefined){
+      readQuoteForm();
+      state.draft.rooms.splice(parseInt(del,10), 1);
+      if (!state.draft.rooms.length) state.draft.rooms.push(blankRoom());
+      renderRooms(); updateTotals();
+    }
+  });
+  $("roomList").addEventListener("input", function(ev){
+    var t = ev.target; if (!t.getAttribute) return;
+    var ri = t.getAttribute("data-r"), f = t.getAttribute("data-f");
+    if (ri===null || !f) return;
+    var room = state.draft.rooms[parseInt(ri,10)]; if (!room) return;
+    if (f==="name") room.name = t.value;
+    else room[f] = clampNonNeg(t.value);
+    updateRoomLine(parseInt(ri,10)); updateTotals();
+  });
+  $("roomList").addEventListener("change", function(ev){
+    var t = ev.target; if (!t.getAttribute) return;
+    var ri = t.getAttribute("data-r"), f = t.getAttribute("data-f");
+    if (ri===null || (f!=="material" && f!=="pattern")) return;
+    var room = state.draft.rooms[parseInt(ri,10)]; if (!room) return;
+    room[f] = t.value;
+    var p = presetFor(room.material);
+    room.wastePct = wasteFor(room.material, room.pattern);
+    if (f==="material"){ room.matSell = p.matSell; room.boxSf = p.boxSf; }
+    renderRooms(); updateTotals();
+  });
+  $("extrasList").addEventListener("input", function(ev){
+    var t = ev.target; if (!t.getAttribute) return;
+    var k = t.getAttribute("data-ex"), f = t.getAttribute("data-ef");
+    if (!k || !f) return;
+    state.draft.extras[k][f] = clampNonNeg(t.value);
+    var line = state.draft.extras[k];
+    var cell = $("exl-"+k); if (cell) cell.textContent = money(line.qty*line.price);
+    updateTotals();
+  });
+  var headerIds = ["qCustomer","qPhone","qAddress","qDate","qDesc"];
+  for (var h=0;h<headerIds.length;h++) $(headerIds[h]).addEventListener("input", function(){ readQuoteForm(); save(); });
+  $("qSource").addEventListener("change", function(){ readQuoteForm(); save(); });
+  var costIds = ["qTravel","qConsumablesPct","qOverheadPct"];
+  for (var c=0;c<costIds.length;c++) $(costIds[c]).addEventListener("input", function(){ updateTotals(); });
+  $("qFinalPrice").addEventListener("input", function(){ finalTouched = true; state.draft.finalPrice = clampNonNeg($("qFinalPrice").value); depositTouched = false; updateTotals(); });
+  $("qDepositDue").addEventListener("input", function(){ depositTouched = true; state.draft.depositDue = clampNonNeg($("qDepositDue").value); save(); });
+  $("saveQuoteBtn").addEventListener("click", saveQuote);
+  $("printQuoteBtn").addEventListener("click", printDraft);
+  $("newQuoteBtn").addEventListener("click", function(){
+    state.draft = blankDraft(state.settings); finalTouched = false; depositTouched = false;
+    save(); fillQuoteForm(); $("saveNote").textContent = "";
+  });
+  $("jobList").addEventListener("click", function(ev){
+    var t = ev.target; if (!t.getAttribute) return;
+    var tog = t.getAttribute("data-toggle") || (t.parentNode && t.parentNode.getAttribute ? t.parentNode.getAttribute("data-toggle") : null);
+    var body = null;
+    var findBody = function(id){ return $("jb-"+id); };
+    if (t.getAttribute("data-savejob")){
+      var j1 = findJob(t.getAttribute("data-savejob")); if (!j1) return;
+      var fields = document.querySelectorAll('[data-jf="'+j1.id+'"]');
+      for (var i=0;i<fields.length;i++){
+        var k = fields[i].getAttribute("data-k");
+        if (k==="status") j1.status = fields[i].value;
+        else j1[k] = clampNonNeg(fields[i].value);
+      }
+      save(); renderJobs();
+      var b1 = findBody(j1.id); if (b1) b1.className = "jobbody open";
+      return;
+    }
+    if (t.getAttribute("data-loadjob")){ var j2 = findJob(t.getAttribute("data-loadjob")); if (j2) loadJobIntoBuilder(j2); return; }
+    if (t.getAttribute("data-printjob")){ var j3 = findJob(t.getAttribute("data-printjob")); if (j3) printJob(j3); return; }
+    if (t.getAttribute("data-deljob")){
+      var id = t.getAttribute("data-deljob");
+      if (confirm("Delete this job from the book?")){
+        state.jobs = state.jobs.filter(function(x){ return x.id!==id; });
+        save(); renderJobs();
+      }
+      return;
+    }
+    if (tog){ body = findBody(tog); if (body) body.className = (body.className.indexOf("open")>=0) ? "jobbody" : "jobbody open"; }
+  });
+  var setIds = ["sCompany","sPhone","sEmail","sCity","sTargetMargin","sFloorMargin","sMinCharge","sDepositPct","sExtrasCostPct","sTravelDefault"];
+  for (var s2=0;s2<setIds.length;s2++) $(setIds[s2]).addEventListener("change", function(){ readSettingsForm(); save(); updateTotals(); });
+  $("tab-settings").addEventListener("change", function(ev){
+    var t = ev.target; if (!t.getAttribute) return;
+    if (t.getAttribute("data-mat") || t.getAttribute("data-wmat")){ readSettingsForm(); save(); }
+  });
+  $("exportBtn").addEventListener("click", exportBackup);
+  $("importFile").addEventListener("change", function(){ if ($("importFile").files && $("importFile").files[0]) importBackup($("importFile").files[0]); });
+  $("clearDemoBtn").addEventListener("click", function(){
+    state.jobs = state.jobs.filter(function(x){ return !x.demo; });
+    save(); renderJobs(); $("dataNote").textContent = "Demo jobs cleared.";
+  });
+  $("eraseBtn").addEventListener("click", function(){
+    if (confirm("Erase ALL FloorBook data (settings, jobs, current quote) from this browser?")){
+      state = {settings:defaultSettings(), jobs:[], draft:blankDraft(defaultSettings())};
+      save(); fillQuoteForm(); renderJobs(); renderDash(); renderSettings();
+      $("dataNote").textContent = "Everything erased. FloorBook is a blank book.";
+    }
+  });
+  var ssb = $("saveSettingsBtn");
+  if (ssb) ssb.addEventListener("click", function(){
+    readSettingsForm(); save(); renderSettings(); updateTotals();
+    var m = $("settingsSaveMsg"); if (m) m.innerHTML = '<span style="color:var(--good);font-weight:700">Settings saved \u2713</span>';
+  });
+  fillQuoteForm();
+}
+
+/* ---------- exports for testing ---------- */
+window.FB = {
+  computeRoom: computeRoom, computeQuote: computeQuote,
+  jobBalance: jobBalance, jobActualCosts: jobActualCosts, jobProfit: jobProfit, primaryMaterial: primaryMaterial,
+  esc: esc, r2: r2, money: money, validISODate: validISODate,
+  sanitizeState: sanitizeState, sanitizeJob: sanitizeJob, sanitizeRoom: sanitizeRoom, sanitizeSettings: sanitizeSettings,
+  seedState: seedState, defaultSettings: defaultSettings, blankDraft: blankDraft, emptyExtras: emptyExtras,
+  buildPrintSheet: buildPrintSheet, companyIsPlaceholder: companyIsPlaceholder, snapshotFromQuote: snapshotFromQuote,
+  renderJobs: renderJobs, renderDash: renderDash, renderSettings: renderSettings, showTab: showTab,
+  STORE_KEY: STORE_KEY, MATERIALS: MATERIALS, PATTERNS: PATTERNS, EXTRAS_DEF: EXTRAS_DEF,
+  getState: function(){ return state; }, load: load, save: save
+};
+init();
+</script>
+
+<!-- ===== White Wolf Digital legal pattern (Terms v1.0) ===== -->
+<style>
+#legalOverlay{position:fixed;inset:0;z-index:99999;background:rgba(10,12,16,.72);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:18px 12px}
+#legalOverlay .legal-box{background:#fff;color:#14181f;max-width:560px;width:100%;border-radius:14px;padding:22px 20px;margin:auto;box-shadow:0 12px 40px rgba(0,0,0,.4);position:relative}
+#legalOverlay h2{margin:0 0 2px;font-size:22px}
+#legalOverlay h3{margin:0 0 12px;font-size:17px}
+#legalOverlay .legal-sum{font-size:16px;line-height:1.55;margin:10px 0}
+#legalOverlay .legal-sum p{margin:4px 0;font-weight:600}
+#legalOverlay .legal-note{background:#fff4d6;border:1px solid #e5c96a;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+#legalAgreeBtn{min-height:52px;width:100%;font-size:17px;font-weight:700;margin-top:14px;cursor:pointer}
+#legalAgreeBtn:disabled{opacity:.45;cursor:not-allowed}
+#legalOverlay .legal-check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:15px;line-height:1.45;cursor:pointer;text-align:left}
+#legalOverlay .legal-check input{width:22px;height:22px;min-width:22px;margin:2px 0 0;cursor:pointer}
+#legalOverlay .legal-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+#legalOverlay .legal-row button{min-height:48px;flex:1 1 200px;cursor:pointer;font-size:15px}
+#legalFullView{position:absolute;inset:0;background:#fff;border-radius:14px;display:none;flex-direction:column;overflow:hidden}
+#legalFullView .legal-full-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #ddd}
+#legalFullText{overflow:auto;padding:14px 18px;font-size:14.5px;line-height:1.55;text-align:left}
+#legalBackBtn{min-height:48px;min-width:88px;cursor:pointer;font-size:15px;font-weight:700}
+#legalCard{text-align:left;font-size:14.5px;line-height:1.55}
+#legalCard h3{margin:16px 0 6px}
+#legalCard ul{margin:6px 0 6px 18px;padding:0}
+#legalPageBtn{min-height:48px;cursor:pointer;font-size:15px;font-weight:700;width:100%}
+.legal-scrollbox{max-height:46vh;overflow:auto;border:1px solid #ddd;border-radius:8px;padding:10px 14px;margin-top:8px}
+</style>
+<script>
+"use strict";
+/* ===== Legal pattern: first-run Terms acceptance + Settings > Legal ===== */
+var TERMS_VERSION = "1.0";
+var LEGAL_APP_NAME = "FloorBook";
+var LEGAL_KEY = "floorbook_v1";
+var LEGAL_KEYS = ["floorbook_v1"];
+var LEGAL_GLOBAL = "state";
+var LEGAL_HAS_DISCLAIMER = true;
+var LEGAL_SETTINGS_SEL = "#tab-settings";
+var LEGAL_TERMS_HTML = "<h2>Terms of Use \u2014 White Wolf Digital Apps</h2>\n<p><strong>Version 1.0 (DRAFT \u2014 pending attorney review)</strong> <strong>Seller: White Wolf Tree Service LLC, selling digital products under the name &quot;White Wolf Digital&quot;</strong> <strong>Contact: whitewolfoklahoma@gmail.com</strong></p>\n<h3>1. What you&#x27;re buying</h3>\n<p>Our apps (including ForgeFit AI, ForgeKitchen, TreeBid Pro, SnowBid, WashPrice Pro, RoofSquares, JobProfit Tracker, PastureLedger, and the other titles sold under White Wolf Digital) are single-file software tools. When you buy one, you are buying a <strong>license to use the file</strong>, not ownership of the software itself.</p>\n<h3>2. Your license</h3>\n<ul>\n<li>You may use the app for your own personal or business work.</li>\n<li>You may open it on your own devices (phone, tablet, computer) and move your own data between them using the app&#x27;s built-in backup/export tools.</li>\n<li>You may <strong>not</strong> resell, redistribute, give away, upload, or share the app file (or a copy of it) with anyone else \u2014 including posting it online, bundling it with other products, or selling access to it.</li>\n<li>You may <strong>not</strong> claim the app as your own work, remove its branding or notices, or use it to build a competing product for resale.</li>\n<li>One purchase = one buyer. A business purchase covers the buyer and their own employees using it for that business&#x27;s work; it does not cover other businesses.</li>\n</ul>\n<h3>3. Your data stays yours \u2014 and stays on your device</h3>\n<ul>\n<li>The current versions of our apps run <strong>entirely on your device</strong>. They have no accounts, no sign-in, no analytics, and they collect, transmit, and store <strong>none</strong> of your information on any server. We never see your data.</li>\n<li>Your records are stored in your browser/app storage on your device. **You are responsible for backing them up** using the app&#x27;s export tools. If you clear your browser data, lose your device, or uninstall the app, your records may be permanently lost, and we cannot recover them \u2014 we never had a copy.</li>\n<li>Files you export (backups, quotes, PDFs) are under your control. Where you store or send them is up to you.</li>\n</ul>\n<h3>4. Estimates are tools, not guarantees</h3>\n<p>Every number our apps produce \u2014 bids, prices, costs, calorie targets, projections, schedules, totals \u2014 is an <strong>estimate generated from the information you enter and the settings you choose</strong>. Outputs are aids for your own judgment, not guarantees of price, profit, outcome, or result. You are responsible for checking any output before relying on it (see also the disclaimer that applies to your app: Health Disclaimer for fitness/nutrition apps, Estimator Disclaimer for contractor tools). If an input is wrong, the output will be wrong.</p>\n<h3>5. Acceptable use</h3>\n<p>Don&#x27;t use the apps to break the law, infringe anyone&#x27;s rights, or misrepresent quotes, invoices, or records to your own customers. For the fitness apps, the guardrails in the app (healthy-rate limits, calorie floor) are part of the product \u2014 don&#x27;t treat the app as a way around them.</p>\n<h3>6. Provided &quot;as is&quot;</h3>\n<p>The apps are provided <strong>&quot;as is&quot; and &quot;as available,&quot; without warranties of any kind</strong>, express or implied \u2014 including merchantability, fitness for a particular purpose, accuracy of calculations, and uninterrupted or error-free operation \u2014 to the maximum extent allowed by law. Software has bugs; browsers change; we work to fix problems but do not promise any app is error-free or will work on every device or browser forever.</p>\n<h3>7. Limitation of liability</h3>\n<p>To the maximum extent allowed by law:</p>\n<ul>\n<li>We are **not liable for indirect, incidental, special, or consequential damages** \u2014 including lost profits, lost or mispriced jobs, lost data, or business interruption \u2014 arising from use of the apps.</li>\n<li>Our total liability for any claim connected to an app is limited to the <strong>amount you paid for that app</strong>.</li>\n<li>Nothing in these terms limits liability that cannot legally be limited.</li>\n</ul>\n<h3>8. Refunds</h3>\n<p>Refunds are handled <strong>by the storefront you bought from, under that storefront&#x27;s policy</strong> \u2014 Gumroad&#x27;s refund policy for Gumroad purchases, and Google Play&#x27;s refund policy for Play purchases. These terms do not add to, replace, or override the storefront&#x27;s refund rules. If a file is defective and won&#x27;t open, contact us at whitewolfoklahoma@gmail.com and we&#x27;ll fix or replace the file.</p>\n<h3>9. Updates and changes to these terms</h3>\n<ul>\n<li>We may release updated versions of an app. Updates may add, change, or remove features.</li>\n<li>We may update these terms. The version you agreed to is recorded in the app (version number and date) at first-run acceptance. If terms change, the app may ask you to accept the new version once on next open. Updated terms apply going forward, not retroactively.</li>\n<li>If you don&#x27;t agree to an updated version of the terms, stop using the app.</li>\n</ul>\n<h3>10. Governing law</h3>\n<p>These terms are governed by the laws of the <strong>State of Oklahoma</strong>, USA. (Attorney to confirm governing law and venue before publication.)</p>\n<h3>11. Contact</h3>\n<p>White Wolf Tree Service LLC (White Wolf Digital) \u2014 whitewolfoklahoma@gmail.com.</p>\n<h3>CONNECTED FEATURES \u2014 takes effect only when these features ship</h3>\n<p><em>The sections below apply only to future connected features (device sync via Health Connect, AI voice logging, and the AI Goal Preview in ForgeFit). They do not apply to the current offline versions, which never transmit data.</em></p>\n<ul>\n<li><strong>Opt-in only.</strong> Connected features are off by default. Each one asks for your separate, explicit consent \u2014 on its own consent screen, in plain language \u2014 before anything leaves your device. Declining never disables the app&#x27;s offline features.</li>\n<li><strong>What gets sent.</strong> Only what the consent screen names, only when you use the feature: for example, a meal description (text, or audio only if cloud transcription is on) for AI voice logging, or the single photo you choose for an AI Goal Preview.</li>\n<li><strong>No retention by us.</strong> Our relay service passes your request to the named AI provider and keeps nothing \u2014 no copies of your photos, audio, transcripts, or entries are stored on our servers. Provider handling is described on the consent screen and in the Privacy Policy.</li>\n<li><strong>Health data stays on the device.</strong> Device sync (Health Connect) reads your health data on your phone and stores it in the app on your phone. It is not uploaded to us.</li>\n<li><strong>Allowances.</strong> Some connected features run on third-party AI services we pay for per use, so they may include a monthly allowance described in the app (for example, a set number of AI previews or voice entries per month), with optional additional credits. Allowances and pricing will be shown in the app before you use the feature; they are not a subscription unless the app says so in plain words.</li>\n<li><strong>Permissions.</strong> Connected features may request device permissions (such as Health Connect access or the microphone) at the moment you first use them. You can revoke permissions any time in your device settings; the related feature will simply stop working.</li>\n</ul>";
+var LEGAL_DISC_HTML = "<h2>Estimator Disclaimer \u2014 Contractor &amp; Trade Tools</h2>\n<p><strong>Applies to: TreeBid Pro, SnowBid, WashPrice Pro, RoofSquares, JobProfit Tracker, FieldForms Toolkit, PaintPro, FenceDeck, MarketMaker, and the other estimating/pricing tools sold under White Wolf Digital \u2014 including bundles that contain them.</strong></p>\n<h3>Estimating aids, not finished quotes</h3>\n<ul>\n<li>These apps are <strong>estimating and record-keeping aids</strong>. Every bid, price, cost, measurement, and total they produce is an **estimate based on the information and rates you enter**.</li>\n<li>**You \u2014 the business owner \u2014 are responsible for verifying everything before you quote a customer:** measurements and quantities, site conditions, your current material and labor costs, your rates and margins, taxes, permit and license requirements, disposal rules, and any contract terms.</li>\n<li>Default rates, presets, and sample data included in the apps are starting points only. They are not market prices, not industry standards, and not a recommendation of what you should charge.</li>\n<li>A saved quote keeps the prices in effect when you created it (price snapshot). Changing your presets later does not change saved quotes \u2014 and a saved quote is still your responsibility to review before sending.</li>\n</ul>\n<h3>Specific tools</h3>\n<ul>\n<li><strong>TreeBid Pro:</strong> tree work is dangerous and site-specific. Difficulty factors and presets cannot see the actual tree, lean, rot, targets, or access. Inspect every job in person before final pricing. The &quot;Invoice with Wave&quot; feature is an open-and-paste handoff \u2014 TreeBid does not connect to Wave, and the invoice you send from Wave is yours.</li>\n<li><strong>RoofSquares / measurement tools:</strong> confirm roof measurements and pitch in person or by your usual method before ordering materials.</li>\n<li><strong>SnowBid / seasonal tools:</strong> route times, snowfall amounts, and service pricing vary by storm and site; seasonal contracts are your agreement with your customer, on your terms.</li>\n<li><strong>JobProfit Tracker:</strong> profit figures depend on the costs you enter. The app is not accounting or tax software and does not replace your bookkeeper or accountant.</li>\n</ul>\n<h3>Bottom line</h3>\n<p>If an output and your judgment disagree, trust your judgment \u2014 then fix the input. We are not responsible for jobs won, lost, or mispriced based on app outputs, within the limits of the Terms of Use.</p>";
+var LEGAL_PRIVACY_HTML = "<h3>Privacy</h3><p>This app has no accounts and no sign-in. It collects no data, runs no analytics, and sends nothing anywhere &mdash; everything you enter is stored only on this device, in this browser/app storage. We never see your data. You are responsible for backing up your records with the app&rsquo;s export tools; files you export are under your control.</p>";
+var __legalRecord = null;
+var __legalOrigSet = localStorage.setItem.bind(localStorage);
+function __legalReadStored(){
+  try { var raw = localStorage.getItem(LEGAL_KEY); if(!raw) return null; var p = JSON.parse(raw); return (p && typeof p === "object") ? p : null; } catch(e){ return null; }
+}
+function __legalAdopt(rec){ if(rec && rec.termsVersion){ __legalRecord = { termsVersion: String(rec.termsVersion), acceptedDate: rec.acceptedDate || "", disclaimerShown: !!rec.disclaimerShown }; } }
+(function(){
+  var stored = __legalReadStored();
+  if (stored && stored.legal) __legalAdopt(stored.legal);
+})();
+/* Keep the acceptance inside the app's own saved state: adopt any legal record the app writes,
+   and re-attach the known record when an app save would otherwise drop it. */
+localStorage.setItem = function(k, v){
+  if (LEGAL_KEYS.indexOf(k) >= 0 && typeof v === "string"){
+    try {
+      var p = JSON.parse(v);
+      if (p && typeof p === "object" && !Array.isArray(p)){
+        if (p.legal) __legalAdopt(p.legal);
+        else if (__legalRecord && k === LEGAL_KEY){ p.legal = __legalRecord; v = JSON.stringify(p); }
+      }
+    } catch(e){}
+  }
+  return __legalOrigSet(k, v);
+};
+function __legalVersionOlder(a, b){
+  var pa = String(a||"0").split("."), pb = String(b||"0").split(".");
+  for (var i = 0; i < Math.max(pa.length, pb.length); i++){ var x = parseInt(pa[i]||"0",10)||0, y = parseInt(pb[i]||"0",10)||0; if (x < y) return true; if (x > y) return false; }
+  return false;
+}
+function __legalAcceptLine(){
+  if (__legalRecord && __legalRecord.acceptedDate) return "You agreed to Terms v" + __legalRecord.termsVersion + " on " + __legalRecord.acceptedDate + ".";
+  return "Terms acceptance not yet recorded.";
+}
+function __legalRenderAcceptLine(){
+  var el = document.getElementById("legalAcceptLine");
+  if (el) el.textContent = __legalAcceptLine();
+}
+function __legalBuildPage(){
+  var sec = document.querySelector(LEGAL_SETTINGS_SEL);
+  if (!sec || document.getElementById("legalCard")) return;
+  var wrap = document.createElement("div");
+  wrap.className = "card";
+  wrap.style.marginTop = "14px";
+  var discSection = LEGAL_HAS_DISCLAIMER ? '<h3>Estimator Disclaimer</h3><div class="legal-scrollbox">' + LEGAL_DISC_HTML + "</div>" : "";
+  wrap.innerHTML = '<h2>Legal</h2>'
+    + '<p><button type="button" id="legalPageBtn">Legal &mdash; Terms, ' + (LEGAL_HAS_DISCLAIMER ? "Disclaimer" : "") + ' &amp; Privacy</button></p>'
+    + '<div id="legalCard" style="display:none">'
+    + '<p id="legalAcceptLine"></p>'
+    + "<h3>Terms of Use</h3>" + '<div class="legal-scrollbox">' + LEGAL_TERMS_HTML + "</div>"
+    + discSection
+    + LEGAL_PRIVACY_HTML
+    + '<p><strong>Sold by:</strong> White Wolf Tree Service LLC (White Wolf Digital) &mdash; whitewolfoklahoma@gmail.com</p>'
+    + "</div>";
+  sec.appendChild(wrap);
+  document.getElementById("legalPageBtn").addEventListener("click", function(){
+    var card = document.getElementById("legalCard");
+    card.style.display = (card.style.display === "none") ? "block" : "none";
+    __legalRenderAcceptLine();
+    if (card.style.display === "block"){ try { card.scrollIntoView({block:"start"}); } catch(e){} }
+  });
+  __legalRenderAcceptLine();
+}
+function __legalShowFull(kind){
+  var fv = document.getElementById("legalFullView");
+  var ft = document.getElementById("legalFullText");
+  var fh = document.getElementById("legalFullTitle");
+  if (!fv || !ft) return;
+  if (kind === "disclaimer"){ ft.innerHTML = LEGAL_DISC_HTML; if (fh) fh.textContent = "Estimator Disclaimer"; }
+  else { ft.innerHTML = LEGAL_TERMS_HTML; if (fh) fh.textContent = "Terms of Use"; }
+  fv.style.display = "flex";
+  ft.scrollTop = 0;
+}
+function __legalMaybePrompt(){
+  var stored = __legalReadStored();
+  var rec = stored && stored.legal ? stored.legal : null;
+  if (rec) __legalAdopt(rec);
+  var need = false, updated = false;
+  if (!rec) need = true;
+  else if (__legalVersionOlder(rec.termsVersion, TERMS_VERSION)){ need = true; updated = true; }
+  var ov = document.getElementById("legalOverlay");
+  if (!ov) return;
+  if (need){
+    var note = document.getElementById("legalUpdatedNote");
+    if (note) note.style.display = updated ? "block" : "none";
+    var chk0 = document.getElementById("legalAgreeCheck");
+    var ab0 = document.getElementById("legalAgreeBtn");
+    if (chk0) chk0.checked = false;
+    if (ab0) ab0.disabled = true;
+    ov.style.display = "flex";
+  } else {
+    ov.style.display = "none";
+  }
+  __legalRenderAcceptLine();
+}
+function __legalAgree(){
+  var chkA = document.getElementById("legalAgreeCheck");
+  if (chkA && !chkA.checked) return;
+  var d = new Date();
+  var iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  __legalRecord = { termsVersion: TERMS_VERSION, acceptedDate: iso, disclaimerShown: LEGAL_HAS_DISCLAIMER };
+  try { var g = window[LEGAL_GLOBAL]; if (g && typeof g === "object") g.legal = __legalRecord; } catch(e){}
+  try {
+    var stored = __legalReadStored();
+    if (stored){ stored.legal = __legalRecord; __legalOrigSet(LEGAL_KEY, JSON.stringify(stored)); }
+    else { var g2 = window[LEGAL_GLOBAL]; if (g2 && typeof g2 === "object") __legalOrigSet(LEGAL_KEY, JSON.stringify(g2)); }
+  } catch(e){}
+  var ov = document.getElementById("legalOverlay");
+  if (ov) ov.style.display = "none";
+  __legalRenderAcceptLine();
+}
+function __legalBuildOverlay(){
+  if (document.getElementById("legalOverlay")) return;
+  var ov = document.createElement("div");
+  ov.id = "legalOverlay";
+  ov.style.display = "none";
+  var discBtn = LEGAL_HAS_DISCLAIMER ? '<button type="button" id="legalDisclaimerBtn">Read the Estimator Disclaimer</button>' : "";
+  var followLine = LEGAL_HAS_DISCLAIMER
+    ? "The full Terms and Disclaimer are one tap away, now and any time in Settings &rarr; Legal."
+    : "The full Terms are one tap away, now and any time in Settings &rarr; Legal.";
+  var checkLabel = LEGAL_HAS_DISCLAIMER
+    ? "I have read the disclaimer and I agree to the Terms of Use"
+    : "I have read and I agree to the Terms of Use";
+  ov.innerHTML = '<div class="legal-box" role="dialog" aria-modal="true" aria-label="Terms of Use">'
+    + "<h2>" + LEGAL_APP_NAME + "</h2><h3>Terms of Use</h3>"
+    + '<div class="legal-note" id="legalUpdatedNote" style="display:none">Our terms were updated (v' + TERMS_VERSION + ").</div>"
+    + '<div class="legal-sum"><p>Your data stays on your device.</p>'
+    + "<p>Estimates are aids, not guarantees.</p>"
+    + "<p>You're responsible for checking outputs before you rely on them.</p></div>"
+    + "<p>" + followLine + "</p>"
+    + '<div class="legal-row"><button type="button" id="legalTermsBtn">Read the full Terms</button>' + discBtn + "</div>"
+    + '<label class="legal-check"><input type="checkbox" id="legalAgreeCheck"> <span>' + checkLabel + '</span></label>'
+    + '<button type="button" id="legalAgreeBtn" disabled>I Agree</button>'
+    + '<div id="legalFullView"><div class="legal-full-head"><button type="button" id="legalBackBtn">&larr; Back</button><strong id="legalFullTitle">Terms of Use</strong></div><div id="legalFullText"></div></div>'
+    + "</div>";
+  document.body.appendChild(ov);
+  document.getElementById("legalAgreeBtn").addEventListener("click", __legalAgree);
+  var agreeChk = document.getElementById("legalAgreeCheck");
+  var agreeBtn = document.getElementById("legalAgreeBtn");
+  if (agreeChk && agreeBtn) agreeChk.addEventListener("change", function(){ agreeBtn.disabled = !agreeChk.checked; });
+  document.getElementById("legalTermsBtn").addEventListener("click", function(){ __legalShowFull("terms"); });
+  var db = document.getElementById("legalDisclaimerBtn");
+  if (db) db.addEventListener("click", function(){ __legalShowFull("disclaimer"); });
+  document.getElementById("legalBackBtn").addEventListener("click", function(){ document.getElementById("legalFullView").style.display = "none"; });
+}
+__legalBuildOverlay();
+__legalBuildPage();
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ __legalBuildOverlay(); __legalBuildPage(); __legalMaybePrompt(); });
+else __legalMaybePrompt();
+</script>
+
+</body>
+</html>
